@@ -11,10 +11,9 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import priv.theo.subtitle.FileInfo;
-import priv.theo.subtitle.RequestInfoDTO;
-import priv.theo.subtitle.ShooterUtils;
-import priv.theo.subtitle.SubInfo;
+import priv.theo.subtitle.dto.ShooterSubtitleFileDTO;
+import priv.theo.subtitle.dto.VideoSubtitleDTO;
+import priv.theo.subtitle.dto.ShooterSubtitleDTO;
 
 import java.io.*;
 import java.util.Objects;
@@ -23,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Shooter subtitle api client
  */
-public class ShooterSubClient {
-    private static final Logger log = LoggerFactory.getLogger(ShooterSubClient.class);
+public class ShooterSubtitleService {
+    private static final Logger log = LoggerFactory.getLogger(ShooterSubtitleService.class);
 
     private static final String SERVICE_URL = "https://www.shooter.cn/api/subapi.php";
     private static final String FILE_HASH = "filehash";
@@ -38,7 +37,7 @@ public class ShooterSubClient {
 
     private static PoolingHttpClientConnectionManager poolingHttpClientConnectionManager;
 
-    public ShooterSubClient() {
+    public ShooterSubtitleService() {
         initPool();
     }
 
@@ -58,17 +57,17 @@ public class ShooterSubClient {
                 .setConnectTimeout(35000).setConnectionRequestTimeout(35000).setSocketTimeout(60000).build();
     }
 
-    public void downloadFirstSubtitle(RequestInfoDTO requestInfoDTO) throws IOException {
-        if (Objects.isNull(requestInfoDTO)
-                || Objects.isNull(requestInfoDTO.getResponseSubInfos())
-                || Objects.isNull(requestInfoDTO.getResponseSubInfos()[0].getFiles())
-                || Objects.isNull(requestInfoDTO.getResponseSubInfos()[0].getFiles()[0])) {
+    public void downloadFirstSubtitle(VideoSubtitleDTO videoSubtitleDTO) throws IOException {
+        if (Objects.isNull(videoSubtitleDTO)
+                || Objects.isNull(videoSubtitleDTO.getShooterSubtitleDTOs())
+                || Objects.isNull(videoSubtitleDTO.getShooterSubtitleDTOs()[0].getFiles())
+                || Objects.isNull(videoSubtitleDTO.getShooterSubtitleDTOs()[0].getFiles()[0])) {
             log.info("downloadSubtitle(): Do not download subtitle. sub info is null!");
             return;
         }
-        log.info("downloadFirstSubtitle(): download subtitle for video {}", requestInfoDTO.getFilePath());
-        FileInfo[] fileInfos = requestInfoDTO.getResponseSubInfos()[0].getFiles();
-        downloadSubtitle(fileInfos[0].getLink(), generateStoragePath(requestInfoDTO.getFilePath()));
+        log.info("downloadFirstSubtitle(): download subtitle for video {}", videoSubtitleDTO.getFilePath());
+        ShooterSubtitleFileDTO[] shooterSubtitleFileDTOS = videoSubtitleDTO.getShooterSubtitleDTOs()[0].getFiles();
+        downloadSubtitle(shooterSubtitleFileDTOS[0].getLink(), generateStoragePath(videoSubtitleDTO.getFilePath()));
     }
 
     private String generateStoragePath(String filePath) {
@@ -99,13 +98,13 @@ public class ShooterSubClient {
 
     }
 
-    public SubInfo[] searchSubtitle(RequestInfoDTO requestInfoDTO) throws IOException {
+    public ShooterSubtitleDTO[] searchSubtitle(VideoSubtitleDTO videoSubtitleDTO) throws IOException {
 
-        log.info("searchSubtitle(): search subtitle for video {}", requestInfoDTO.getFilePath());
+        log.info("searchSubtitle(): search subtitle for video {}", videoSubtitleDTO.getFilePath());
         HttpClient httpClient = getHttpClient();
 
 
-        HttpPost httpPost = new HttpPost(generateUrl(requestInfoDTO));
+        HttpPost httpPost = new HttpPost(generateUrl(videoSubtitleDTO));
         httpPost.setConfig(getDefaultRequestConfig());
 
 
@@ -120,19 +119,19 @@ public class ShooterSubClient {
             return null;
         }
         Gson gson = new Gson();
-        SubInfo[] subInfos = gson.fromJson(result, SubInfo[].class);
+        ShooterSubtitleDTO[] subInfos = gson.fromJson(result, ShooterSubtitleDTO[].class);
         log.info("sendRequest(): response:{}", subInfos);
         return subInfos;
     }
 
 
 
-    private String generateUrl(RequestInfoDTO requestInfoDTO) throws IOException {
+    private String generateUrl(VideoSubtitleDTO videoSubtitleDTO) throws IOException {
         StringBuilder stringBuilder;
-        stringBuilder = new StringBuilder(ShooterSubClient.SERVICE_URL);
-        stringBuilder.append("?").append(FILE_HASH).append(EQUAL_SIGN).append(requestInfoDTO.getFileHash());
+        stringBuilder = new StringBuilder(SERVICE_URL);
+        stringBuilder.append("?").append(FILE_HASH).append(EQUAL_SIGN).append(videoSubtitleDTO.getFileHash());
         stringBuilder.append("&").append(FORMAT).append(EQUAL_SIGN).append(FORMAT_JSON);
-        stringBuilder.append("&").append(PATH_INFO).append(EQUAL_SIGN).append(requestInfoDTO.getFilePath());
+        stringBuilder.append("&").append(PATH_INFO).append(EQUAL_SIGN).append(videoSubtitleDTO.getFilePath());
         stringBuilder.append("&").append(LANG).append(EQUAL_SIGN).append(LANG_CHN);
 
         return stringBuilder.toString();

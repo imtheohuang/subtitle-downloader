@@ -14,6 +14,14 @@ import java.util.Arrays;
 public class ShooterUtils {
     private static final Logger log = LoggerFactory.getLogger(ShooterUtils.class);
 
+    /**
+     * compute the file hash
+     * refer https://docs.google.com/document/d/1ufdzy6jbornkXxsD-OGl3kgWa4P9WO5NZb6_QYZiGI0/preview
+     *
+     * @param file File
+     * @return the special hash
+     * @throws IOException
+     */
     public static String computeFileHash(File file) throws IOException {
 
         RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");

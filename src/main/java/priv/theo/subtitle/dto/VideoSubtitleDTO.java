@@ -1,15 +1,15 @@
-package priv.theo.subtitle;
+package priv.theo.subtitle.dto;
 
 import java.io.File;
 
-public class RequestInfoDTO {
+public class VideoSubtitleDTO {
 
     private String filePath;
     private String fileHash;
     private File sourceFile;
-    private SubInfo[] responseSubInfos;
+    private ShooterSubtitleDTO[] shooterSubtitleDTOs;
 
-    public RequestInfoDTO() {
+    public VideoSubtitleDTO() {
     }
 
     public String getFilePath() {
@@ -20,12 +20,12 @@ public class RequestInfoDTO {
         this.filePath = filePath;
     }
 
-    public SubInfo[] getResponseSubInfos() {
-        return responseSubInfos;
+    public ShooterSubtitleDTO[] getShooterSubtitleDTOs() {
+        return shooterSubtitleDTOs;
     }
 
-    public void setResponseSubInfos(SubInfo[] responseSubInfos) {
-        this.responseSubInfos = responseSubInfos;
+    public void setShooterSubtitleDTOs(ShooterSubtitleDTO[] shooterSubtitleDTOS) {
+        this.shooterSubtitleDTOs = shooterSubtitleDTOS;
     }
 
     public String getFileHash() {

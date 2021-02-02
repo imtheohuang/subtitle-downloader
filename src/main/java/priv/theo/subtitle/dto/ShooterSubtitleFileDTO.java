@@ -1,4 +1,4 @@
-package priv.theo.subtitle;
+package priv.theo.subtitle.dto;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -8,13 +8,13 @@ import java.util.Objects;
  * Ext    string  文件扩展名
  * Link   string  文件下载链接
  */
-public class FileInfo {
+public class ShooterSubtitleFileDTO {
     @SerializedName("Ext")
     private String ext;
     @SerializedName("Link")
     private String link;
 
-    public FileInfo() {
+    public ShooterSubtitleFileDTO() {
     }
 
     public String getExt() {
@@ -45,9 +45,9 @@ public class FileInfo {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FileInfo fileInfo = (FileInfo) o;
-        return Objects.equals(ext, fileInfo.ext) &&
-                Objects.equals(link, fileInfo.link);
+        ShooterSubtitleFileDTO shooterSubtitleFileDTO = (ShooterSubtitleFileDTO) o;
+        return Objects.equals(ext, shooterSubtitleFileDTO.ext) &&
+                Objects.equals(link, shooterSubtitleFileDTO.link);
     }
 
     @Override

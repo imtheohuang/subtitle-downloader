@@ -1,0 +1,6 @@
+shooter:
+  serverUrl: https://www.shooter.cn/api/subapi.php
+
+
+config:
+  videoSuffix: mp4,m4v,mov,mkv,avi,flv,rm,rmvb
