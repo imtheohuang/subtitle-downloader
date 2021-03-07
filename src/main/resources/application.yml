@@ -4,3 +4,6 @@ shooter:
 
 config:
   videoSuffix: mp4,m4v,mov,mkv,avi,flv,rm,rmvb
+  targetPath: N:\Share\Videos\TV\Young.Sheldon\S03
+server:
+  port: 8080

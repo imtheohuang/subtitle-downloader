@@ -1,8 +1,12 @@
-package priv.theo.subtitle;
+package priv.theo.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import priv.theo.service.ShooterSubtitleService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Component;
 import priv.theo.subtitle.dto.ShooterSubtitleDTO;
 import priv.theo.subtitle.dto.VideoSubtitleDTO;
 
@@ -10,29 +14,35 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-public class Client {
-    private static final Logger log = LoggerFactory.getLogger(Client.class);
+@Slf4j
+@Component
+public class SubtitleDownloaderService {
+    @Value("${config.videoSuffix}")
+    private Set<String> videoSuffix;
+//
+//    public static void main(String[] args) {
+//        String path = "/Volumes/N1/Share/Videos/TV";
+//        searchAndDown(path);
+//    }
 
-    private static String videoSuffixStr = "mp4,m4v,mov,mkv,avi,flv,rm,rmvb";
-    private static Set<String> videoSuffix = new HashSet<String>(Arrays.asList(videoSuffixStr.split(",")));
+    @Autowired
+    private ShooterSubtitleService shooterSubtitleService;
 
-    public static void main(String[] args) {
-        String path = "/Volumes/N1/Share/Videos/TV";
-        searchAndDown(path);
-    }
+    @Autowired
+    private ThreadPoolTaskExecutor asyncExecutor;
 
-    private static void searchAndDownloadSubtitleForOne() {
+    public void searchAndDownloadSubtitleForOne() {
         String filePath = "/Users/theo/Desktop/Young.Sheldon.S01E02.720p.HDTV.X264-DIMENSION.mkv";
         VideoSubtitleDTO videoSubtitleDTO = new VideoSubtitleDTO();
         videoSubtitleDTO.setSourceFile(new File(filePath));
         videoSubtitleDTO.setFilePath(filePath);
         try {
-            videoSubtitleDTO.setFileHash(ShooterUtils.computeFileHash(videoSubtitleDTO.getSourceFile()));
+            videoSubtitleDTO.setFileHash(shooterSubtitleService.computeFileHash(videoSubtitleDTO.getSourceFile()));
         } catch (IOException e) {
             log.warn("Compute file hash error. Do not send request to service to search subtitle. File path={}", filePath);
             return;
         }
-        ShooterSubtitleService shooterSubtitleService = new ShooterSubtitleService();
+
         try {
             ShooterSubtitleDTO[] subInfos = shooterSubtitleService.searchSubtitle(videoSubtitleDTO);
             videoSubtitleDTO.setShooterSubtitleDTOs(subInfos);
@@ -43,7 +53,7 @@ public class Client {
         }
     }
 
-    private static void searchAndDown(String path) {
+    public void searchAndDown(String path) {
         log.info("search and down load subtitle for dir {}", path);
         List<String> videoList = new ArrayList<>();
         findAllVideo(path, videoList);
@@ -53,7 +63,6 @@ public class Client {
             return;
         }
         List<VideoSubtitleDTO> hasSubtitleToDownloadList = new ArrayList<>();
-        ShooterSubtitleService shooterSubtitleService = new ShooterSubtitleService();
 
         log.info("video list: {}", videoList);
         for (String video : videoList) {
@@ -61,7 +70,7 @@ public class Client {
             videoSubtitleDTO.setSourceFile(new File(video));
             videoSubtitleDTO.setFilePath(video);
             try {
-                videoSubtitleDTO.setFileHash(ShooterUtils.computeFileHash(videoSubtitleDTO.getSourceFile()));
+                videoSubtitleDTO.setFileHash(shooterSubtitleService.computeFileHash(videoSubtitleDTO.getSourceFile()));
             } catch (IOException e) {
                 log.warn("Compute file hash error. Do not send request to service to search subtitle. File path={}", video);
                 e.printStackTrace();
@@ -82,18 +91,11 @@ public class Client {
             log.warn("path {} do not need to download subtitle.", path);
         }
 
-        hasSubtitleToDownloadList.forEach(videoSubtitleDTO -> {
-            try {
-                shooterSubtitleService.downloadFirstSubtitle(videoSubtitleDTO);
-            } catch (IOException e) {
-                log.warn("download failed. video:{}", videoSubtitleDTO.getFilePath());
-                e.printStackTrace();
-            }
-        });
+        hasSubtitleToDownloadList.forEach(videoSubtitleDTO -> shooterSubtitleService.downloadFirstSubtitle(videoSubtitleDTO));
         log.info("search and download completed for dir {}", path);
     }
 
-    private static void findAllVideo(String path, List<String> videoList) {
+    private void findAllVideo(String path, List<String> videoList) {
         File file = new File(path);
 
         if (!file.exists()) {
@@ -112,7 +114,7 @@ public class Client {
         if (!path.contains(".")) {
             return;
         }
-        String suffix = path.substring(path.lastIndexOf(".") + 1, path.length());
+        String suffix = path.substring(path.lastIndexOf(".") + 1);
         if (videoSuffix.contains(suffix)) {
             videoList.add(file.getAbsolutePath());
         }
